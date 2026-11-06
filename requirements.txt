@@ -1,4 +1,6 @@
-streamlit>=1.35,<2
-requests>=2.31
-pandas>=2.0
-reportlab>=4.0
+streamlit>=1.45,<2
+requests>=2.31,<3
+pandas>=2.0,<3
+reportlab>=4.0,<5
+beautifulsoup4>=4.12,<5
+pypdf>=5,<7

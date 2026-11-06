@@ -1,0 +1,87 @@
+[
+  {
+    "id": "WO2007016350A2-example1-composition1",
+    "identities": ["guanfacine", "guanfacina", "intuniv"],
+    "forms": ["Comprimido simples", "Comprimido revestido"],
+    "release": "Prolongada",
+    "route": "Compressão direta",
+    "basis": "percent_dry",
+    "source_id": "PAT-GUA",
+    "locator": "Exemplo 1, Tabela 1, composição 1; PDF p.14 (página impressa 13)",
+    "original_api_pct": 0.76,
+    "api_name": "Cloridrato de guanfacina",
+    "diluent": "Celulose microcristalina silicificada (Prosolv HD90)",
+    "components": [
+      {"name":"Hipromelose 2208 K4M","function":"Polímero matricial","pct":13.34,"why":"Hidratação e gelificação; grau e proporção do exemplo experimental."},
+      {"name":"Copolímero ácido metacrílico/acrilato de etila (L100-55)","function":"Modulador de liberação e compactação","pct":33.33,"why":"Componente da matriz; não implica aplicá-lo como filme entérico."},
+      {"name":"Ácido fumárico","function":"Modificador do microambiente","pct":5.0,"why":"Investigar manutenção de microambiente ácido para a base de solubilidade dependente do pH."},
+      {"name":"Dibehenato de glicerila (Compritol 888 ATO)","function":"Lubrificante / modulador hidrofóbico","pct":13.33,"why":"Nível do exemplo; lubrificação e fração lipídica podem afetar dissolução."},
+      {"name":"Ludipress (lactose/povidona/crospovidona)","function":"Diluente coprocessado","pct":16.91,"why":"Contém componentes internos; não adicioná-los outra vez como matérias-primas independentes."}
+    ],
+    "sources": ["EMA-GUA","EMA-AR","FDA-GUA","PAT-GUA","BASF"],
+    "benchmark": [
+      "[EMA-GUA §2–3; FDA-GUA §11] A dose é expressa em guanfacina base, na forma de cloridrato. A liberação do referência é matricial prolongada.",
+      "[EMA-GUA §2] Lactose declarada na apresentação europeia de 4 mg: 50,42 mg (como monoidrato). Não comprova Q2 integral ou peso do comprimido.",
+      "[EMA-AR §2.2.3] Compressão direta, mistura e uniformidade são críticas. O processo público não descreve revestimento obrigatório."
+    ],
+    "q1": ["Hipromelose 2208","Copolímero ácido metacrílico/acrilato de etila","Lactose monoidratada","Povidona","Crospovidona A","Celulose microcristalina","Sílica","Laurilsulfato de sódio","Polissorbato 80","Ácido fumárico","Dibehenato de glicerila","Corantes nas doses de 3/4 mg"],
+    "steps": [
+      "Qualificar identidade, teor, forma sólida, PSD, umidade e compatibilidade de IFA, polímeros e coprocessados.",
+      "Classificar materiais e preparar pré-mistura do IFA por diluição geométrica com parte do diluente. Definir malha e tempo por recuperação/uniformidade; números da patente não são parâmetros validados de nova escala.",
+      "Incorporar polímeros, ácido e diluentes; estudar uniformidade e segregação durante mistura e transferência.",
+      "Adicionar lubrificante em etapa final controlada, estudando o impacto do tempo na dissolução.",
+      "Comprimir até a massa de núcleo calculada e relacionar força/velocidade, resistência, porosidade e dissolução.",
+      "Embalar e estudar estabilidade. PCTFE/PVC/alumínio é benchmark europeu, não seleção automaticamente validada."
+    ]
+  },
+  {
+    "id":"US20110217373A1-example8A",
+    "identities":["guanfacine","guanfacina","intuniv"],
+    "forms":["Comprimido simples","Comprimido revestido"],
+    "release":"Prolongada",
+    "route":"Granulação úmida",
+    "basis":"percent_dry",
+    "source_id":"PAT-GUA-WET",
+    "locator":"Exemplo 8, formulação A e procedimento A",
+    "original_api_pct":1.73,
+    "api_name":"Cloridrato de guanfacina",
+    "diluent":"Celulose microcristalina",
+    "components":[
+      {"name":"Lactose","function":"Diluente intragranular","pct":19.80,"why":"Grau e forma hidratada precisam ser qualificados."},
+      {"name":"Povidona","function":"Aglutinante","pct":1.51,"why":"Aglutinante do exemplo; quantidade de líquido é variável de processo."},
+      {"name":"Ftalato de hipromelose (HPMCP)","function":"Polímero dependente do pH","pct":25.19,"why":"Alternativa experimental, diferente do copolímero metacrílico do referência."},
+      {"name":"Ácido fumárico","function":"Modificador do microambiente","pct":5.04,"why":"Fração extragranular descrita no exemplo A."},
+      {"name":"Hipromelose","function":"Polímero matricial","pct":10.08,"why":"Adição extragranular; grau/viscosidade precisam ser qualificados."},
+      {"name":"Dibehenato de glicerila","function":"Lubrificante","pct":15.11,"why":"Nível do exemplo 8A; não transplantado da receita por compressão direta."}
+    ],
+    "sources":["EMA-GUA","EMA-AR","FDA-GUA","PAT-GUA-WET"],
+    "benchmark":["O exemplo 8A usa HPMCP: a Q1 desta alternativa difere da referência Intuniv. A fórmula não é apresentada como composição comercial."],
+    "steps":["Confirmar estabilidade/compatibilidade com líquido de granulação.","Pré-misturar IFA, lactose, celulose e HPMCP.","Granular com povidona; estudar líquido, vazão e ponto final.","Secar, calibrar e estabelecer umidade residual e PSD por estudo.","Incorporar ácido e hipromelose extragranulares, depois o lubrificante.","Comprimir e comparar teor, impurezas e dissolução com a rota direta e o comparador."]
+  },
+  {
+    "id":"US20170258749A1-example2",
+    "identities":["oseltamivir","tamiflu"],
+    "forms":["Pó para suspensão oral"],
+    "release":"Convencional",
+    "route":"Duas populações de pó/grânulos",
+    "basis":"percent_dry",
+    "source_id":"PAT-OSE",
+    "locator":"Exemplo 2: composição e procedimento",
+    "original_api_pct":3.97,
+    "api_name":"Fosfato de oseltamivir",
+    "diluent":"Sorbitol — população 2",
+    "components":[
+      {"name":"Sorbitol — população 1","function":"Diluente","pct":34.53,"phase":"População 1","why":"Fração do exemplo; qualificar distribuição granulométrica."},
+      {"name":"Goma xantana","function":"Agente suspensor","pct":1.5,"phase":"População 1","why":"Nível do pó seco; verificar viscosidade após reconstituição."},
+      {"name":"Citrato monossódico","function":"Controle do microambiente","pct":5.51,"phase":"População 2","why":"Verificar pH final e compatibilidade."},
+      {"name":"Sacarina sódica","function":"Edulcorante","pct":0.10,"phase":"População 2","why":"Verificar palatabilidade e exposição por dose."},
+      {"name":"Benzoato de sódio","function":"Conservante","pct":0.25,"phase":"População 2","why":"Comprovar eficácia no pH final; não inferir conservação só pela concentração."},
+      {"name":"Dióxido de titânio","function":"Opacificante","pct":1.5,"phase":"População 2","why":"Confirmar adequação à população/mercado e necessidade tecnológica."},
+      {"name":"Aroma","function":"Palatabilidade","pct":1.5,"phase":"Extragranular","why":"Qualificar composição, dose e compatibilidade."}
+    ],
+    "sources":["EMA-OSE","FDA-OSE","PAT-OSE"],
+    "benchmark":["[EMA-OSE §2] A apresentação europeia de 6 mg/mL expressa oseltamivir base; descreve 65 mL finais. O volume solicitado é independente.","[EMA-OSE §2] Benzoato de sódio declarado: 2,5 mg/5 mL. O restante da Q2 proposta vem de exemplo experimental, não da formulação comercial."],
+    "q1":["Sorbitol","Citrato monossódico","Goma xantana","Benzoato de sódio","Sacarina sódica","Dióxido de titânio","Aroma"],
+    "steps":["Caracterizar IFA/excipientes, PSD, umidade e compatibilidade.","Misturar IFA, sorbitol da primeira população e xantana.","Preparar a segunda população conforme o procedimento do exemplo. Investigar solventes, granulação e secagem; os parâmetros não são validados para nova escala.","Combinar aroma e envasar as frações segundo o desenho do exemplo; avaliar segregação e recuperação.","Determinar experimentalmente o volume de água para atingir o volume final solicitado; considerar deslocamento do pó.","Avaliar teor por dose medida, pH, viscosidade, redispersão, conservação e estabilidade após reconstituição."]
+  }
+]
