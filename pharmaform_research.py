@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 from pypdf import PdfReader
 import requests
 
+from pharmaform_identity import international_name
 from pharmaform_core import SNAPSHOT_DATE, PROFILES, Target, identify, norm, now, release_type, search_aliases
 
 
@@ -86,7 +87,7 @@ def get_url(url, params=None, as_json=False):
     """One bounded retry for transient errors, no retries on denied endpoints."""
     for attempt in range(2):
         try:
-            r = requests.get(url, params=params, timeout=(4, 10),
+            r = requests.get(url, params=params, timeout=(8, 20),
                              headers={"User-Agent": "PharmaForm/0.3 pharmaceutical-document-research",
                                       "Accept": "application/json" if as_json else "*/*"})
             if r.status_code in [429, 500, 502, 503, 504] and attempt == 0:
@@ -172,11 +173,12 @@ EXCIPIENTS = {
 def extract_q1(description):
     s = norm(description)
     # Restrict to explicit ingredient context; matches in clinical sections are not Q1.
-    anchors = ["inactive ingredients", "tablets also contain", "tablets contain", "capsules contain", "powder for oral suspension contains"]
+    anchors = ["inactive ingredients", "inactive ingredient", "tablets also contain", "tablets contain", "capsules contain", "capsules also contain", "inactive components", "powder for oral suspension contains"]
     starts = [s.find(x) for x in anchors if x in s]
     if not starts:
         return []
     s = s[min(starts):]
+    s = re.split(r"capsule (?:shell|body|cap)|capsule shells|shell contains|coating contains|film coating", s)[0]
     s = re.split(r"12\s+clinical|clinical pharmacology|mechanism of action", s)[0]
     return list(dict.fromkeys(value for key, value in EXCIPIENTS.items()
                               if re.search(r"(?<!\w)" + re.escape(key) + r"(?!\w)", s)))
@@ -208,7 +210,7 @@ def fetch_reference(s):
         if expected and expected not in norm(text):
             item["status"] = "Documento recebido; identidade/texto não confirmado. Perfil curado não revalidado"
             return item, f"{item['id']}: conteúdo extraído não confirmou a identidade esperada"
-        item["status"] = f"Documento acessível; perfil quantitativo curado em {SNAPSHOT_DATE}"
+        item["status"] = f"Documento acessível; referência curada em {SNAPSHOT_DATE}; conteúdo quantitativo não revalidado"
         return item, None
     except Exception as exc:
         item["status"] = f"Documento recebido; extração falhou. Perfil curado em {SNAPSHOT_DATE}"
@@ -218,7 +220,7 @@ def fetch_reference(s):
 def literature(target):
     aliases = search_aliases(target)
     key = identify(target)
-    primary = key if key else (target.api.strip() or target.product.strip())
+    primary = key if key else international_name(target.api.strip() or target.product.strip())
     terms = list(dict.fromkeys([primary, target.product.strip()]))
     terms = [x for x in terms if x]
     query = "(" + " OR ".join('"' + x.replace('"', '') + '"' for x in terms) + ") AND (formulation OR excipient OR matrix OR manufacturing)"
@@ -250,7 +252,7 @@ def fda_labels(target):
     name = target.product.strip() or target.api.strip()
     queries = [f'openfda.brand_name:"{name.replace(chr(34), "")}"'] if target.product.strip() else []
     key = identify(target)
-    generic = key if key else next((a for a in target.identity_terms if a), target.api.strip())
+    generic = key if key else international_name(target.api.strip()) or next((a for a in target.identity_terms if a), "")
     if generic:
         queries.append(f'openfda.generic_name:"{generic.replace(chr(34), "")}"')
     results, issues, log = [], [], []
@@ -275,7 +277,7 @@ def fda_labels(target):
             rid = item.get("id", "")
             url = "https://api.fda.gov/drug/label.json?" + urlencode({"search": f'id:"{rid}"'})
             title = f"{brands or generics} — rotulagem FDA ({item.get('effective_time', '')})"
-            r = record("FDA / openFDA", title, url, classify(" ".join([brands, generics, desc, dosage, presentation]), target), locator="description; dosage_forms_and_strengths; inactive_ingredient; spl_product_data_elements")
+            r = record("FDA / openFDA", title, url, classify(" ".join([brands, generics, dosage, presentation]), target), locator="description; dosage_forms_and_strengths; inactive_ingredient; spl_product_data_elements")
             r["status"] = "Texto de rotulagem recuperado; apresentação requer revisão"
             r["q1"] = extract_q1(desc + " inactive ingredients " + ingredients) if ingredients else extract_q1(desc)
             r["substance_names"] = substances
@@ -290,17 +292,22 @@ def fda_labels(target):
                 r["detected_release"] = "Convencional"
             form_patterns = {"Comprimido simples": r"tablet|caplet|comprimid", "Comprimido revestido": r"tablet|caplet|comprimid", "Comprimido sublingual": r"sublingual", "Cápsula dura": r"capsul", "Pó para suspensão oral": r"suspension|suspensao", "Solução oral": r"oral solution|solucao oral"}
             form_found = bool(re.search(form_patterns[target.form], norm(primary_form)))
+            r["reference_match"] = not target.product.strip() or norm(target.product) in [norm(b) for b in item.get("openfda", {}).get("brand_name", [])]
             r["target_q1"] = bool(r["q1"]) and form_found and not r["scope"].startswith(("Outra", "Descartada")) and "múltiplas" not in r["scope"]
             from pharmaform_core import parse_dose
             dose, _ = parse_dose(target.dose)
             active_section = " ".join(item.get("active_ingredient", []) + item.get("dosage_forms_and_strengths", []))
             r["dose_matches"] = bool(re.search(r"(?<![\d.])" + re.escape(f"{dose:g}") + r"\s*mg\b", active_section, re.I))
+            if not r["dose_matches"]:
+                r["target_q1"] = False
+            if re.search(r"(?:\d+\s*mg.{0,50}(?:only|contain)|different.{0,30}(?:strength|color))", ingredients, re.I):
+                r["target_q1"] = False
             if r["q1"]:
                 r["finding"] = f"[{r['id']}] Excipientes detectados na descrição da rotulagem; conferir a apresentação: " + ", ".join(r["q1"])
             results.append(r)
-        if results:
+        if any(r.get("target_q1") for r in results):
             break
-    return results, issues, log, []
+    return list({r["id"]: r for r in results}.values()), issues, log, []
 
 
 def numeric_examples(html, source_id, target, scope):
@@ -366,7 +373,7 @@ def numeric_examples(html, source_id, target, scope):
 def patents(target):
     key = identify(target)
     # Known examples are curated above; retrieve actual additional results as candidates.
-    term = key or target.api.strip() or target.product.strip()
+    term = key or international_name(target.api.strip()) or target.product.strip()
     query = f'"{term}" pharmaceutical formulation'
     if release_type(target) == "Prolongada":
         query += ' "extended release"'
@@ -413,7 +420,13 @@ def research(target, online=True):
         result["sources"] = list(source_map.values())
         return result
     from pharmaform_resolver import resolve_initial, resolve_from_labels
-    identity_sources, identity_issues = resolve_initial(target)
+    from pharmaform_leaflets import official_leaflet
+    br_rows, br_issues, br_log, _ = official_leaflet(target)
+    result["issues"] += br_issues
+    result["queries"] += br_log
+    for item in br_rows:
+        source_map[item["id"]] = item
+    identity_sources, identity_issues = ([], []) if br_rows else resolve_initial(target)
     result["issues"] += identity_issues
     for s in identity_sources:
         source_map[s["id"]] = s
@@ -421,7 +434,9 @@ def research(target, online=True):
     result["issues"] += label_issues
     result["queries"] += label_log
     label_rows.sort(key=lambda r: (not r.get("dose_matches"), not r.get("target_q1"), r["title"]))
-    extra_sources, extra_issues = resolve_from_labels(target, label_rows)
+    if br_rows:
+        for item in label_rows: item["target_q1"] = False
+    extra_sources, extra_issues = ([], []) if br_rows else resolve_from_labels(target, label_rows)
     result["issues"] += extra_issues
     for s in extra_sources + label_rows:
         source_map[s["id"]] = s

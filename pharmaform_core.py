@@ -14,7 +14,7 @@ import re
 import unicodedata
 from zoneinfo import ZoneInfo
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 SNAPSHOT_DATE = "2026-11-04"
 FORMS = ["Comprimido revestido", "Comprimido simples", "Cápsula dura",
          "Pó para suspensão oral", "Solução oral", "Comprimido sublingual"]
@@ -52,6 +52,9 @@ class Target:
     mw_material: float = 0.0
     molar_ratio: float = 1.0
     dry_mass_g: float = 0.0
+    label_url: str = ""
+    label_factor: float = 0.0
+    label_factor_source: str = ""
     identity_terms: list = field(default_factory=list)
     detected_release: str = ""
     mw_source_ids: list = field(default_factory=list)
@@ -63,6 +66,12 @@ class Target:
             raise ValueError("Informe o medicamento ou o IFA.")
         if self.form not in FORMS:
             raise ValueError("Forma farmacêutica não reconhecida.")
+        for name in ["mw_base", "mw_material", "dry_mass_g"]:
+            value = getattr(self, name)
+            if not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                raise ValueError(f"Valor inválido em {name}.")
+        if bool(self.mw_base) != bool(self.mw_material):
+            raise ValueError("Informe ambas as massas molares, ou deixe ambas em zero.")
         parse_dose(self.dose)
         for name in ["mass_mg", "volume_ml", "potency_pct", "molar_ratio"]:
             v = getattr(self, name)
@@ -153,6 +162,8 @@ def search_aliases(target):
                 translated = translated.replace(old, new)
             if len(translated.strip()) >= 4:
                 values.append(translated.strip())
+    from pharmaform_identity import international_name
+    values += [international_name(x) for x in values if x]
     return list(dict.fromkeys(x for x in values if x))
 
 
@@ -171,9 +182,14 @@ def dose_calculation(target):
     dose, per_ml = parse_dose(target.dose)
     amount = dose * (target.volume_ml if per_ml else 1)
     key = identify(target)
+    if target.dose_basis == "Identificar pela bula" and not target.label_factor_source and not key:
+        raise ValueError("A base da concentração não foi confirmada na bula. Selecione base/porção ativa ou material (sal/IFA) conforme o documento; não se presume que o número da embalagem esteja expresso na base livre.")
     if target.dose_basis == "Material informado (sal/IFA)":
         factor = 1.0
         source = "Entrada: dose expressa no próprio material"
+    elif target.label_factor > 0 and target.label_factor_source:
+        factor = target.label_factor
+        source = target.label_factor_source
     elif key:
         p = PROFILES[key]
         factor = p["mw_material"] / p["mw_base"]

@@ -17,33 +17,22 @@ def cached_research(serialized, online):
     return research(Target(**json.loads(serialized)), online=online)
 
 
-def example(kind):
-    defaults = {"product": "", "api": "", "dose": "", "form": FORMS[0], "release": "Identificar pela referência", "mass": 200.0,
-                "mass_basis": "Produto acabado", "volume": 60.0, "dose_basis": "Base / porção ativa"}
-    choices = {
-        "lp": dict(product="Intuniv", api="Cloridrato de guanfacina", dose="4 mg de guanfacina base"),
-        "ir": dict(product="Tylenol", api="Paracetamol", dose="500 mg", mass=700.0, release="Convencional"),
-        "susp": dict(product="Tamiflu", api="Fosfato de oseltamivir", dose="6 mg/mL", form="Pó para suspensão oral"),
-    }
-    st.session_state.update({**defaults, **choices[kind]})
-    st.session_state.pop("result", None)
-
-
 def main():
     st.set_page_config(page_title="PharmaForm", page_icon="💊", layout="wide")
     st.title("PharmaForm")
     st.caption(f"Referência e IFA → evidências → proposta inicial → relatório | v{VERSION}")
     st.info("Pesquisa o produto informado e propõe uma formulação inicial com dose, balanço, justificativas e processo. Quantidades documentadas, calculadas e experimentais aparecem identificadas.")
-    a, b, c = st.columns(3)
-    a.button("Exemplo · comprimido LP", on_click=example, args=("lp",), use_container_width=True)
-    b.button("Exemplo · comprimido convencional", on_click=example, args=("ir",), use_container_width=True)
-    c.button("Exemplo · pó para suspensão", on_click=example, args=("susp",), use_container_width=True)
+    if st.button("Atualizar fontes na próxima busca"):
+        cached_research.clear()
+        st.info("Cache limpo. Envie a busca para consultar as fontes novamente.")
     with st.form("research"):
         left, right = st.columns(2)
         with left:
             product = st.text_input("Medicamento de referência", key="product", placeholder="Nome comercial; pode ficar vazio se o IFA estiver informado")
-            api = st.text_input("IFA / sal", key="api", placeholder="Ex.: cloridrato de guanfacina; também pode ser resolvido pelo nome comercial")
-            dose = st.text_input("Concentração", key="dose", placeholder="Ex.: 4 mg de base ou 6 mg/mL")
+            api = st.text_input("IFA / sal", key="api", placeholder="Nome do princípio ativo e forma química")
+            label_url = st.text_input("URL da bula oficial (opcional)", key="label_url", placeholder="Link do fabricante ou autoridade regulatória")
+            dose = st.text_input("Concentração", key="dose", placeholder="Dose e unidade; indique se expressa na base ou no sal")
+            basis = st.selectbox("A concentração é expressa em", ["Identificar pela bula", "Base / porção ativa", "Material informado (sal/IFA)"], key="dose_basis")
         with right:
             form = st.selectbox("Forma farmacêutica", FORMS, key="form")
             release = st.selectbox("Liberação", ["Identificar pela referência", "Convencional", "Prolongada", "Retardada", "Sublingual"], key="release")
@@ -53,7 +42,6 @@ def main():
         volume = right.number_input("Volume final, quando aplicável (mL)", min_value=.1, value=60.0, step=5.0, key="volume")
         with st.expander("Opções técnicas"):
             l, r = st.columns(2)
-            basis = l.selectbox("A concentração é expressa em", ["Base / porção ativa", "Material informado (sal/IFA)"], key="dose_basis")
             potency = r.number_input("Teor do material na base de pesagem (%)", min_value=.01, max_value=100.0, value=100.0, step=.1,
                                      help="Usar o teor e a base de cálculo do certificado. Água/solventes não são corrigidos duas vezes.")
             mass_basis = l.selectbox("O peso informado corresponde a", ["Produto acabado", "Núcleo / conteúdo"], key="mass_basis")
@@ -73,7 +61,7 @@ def main():
         st.session_state.pop("result", None)
         try:
             t = Target(product, api, dose, form, release, mass, mass_basis, volume, gain, potency, basis, route,
-                       mw_base=mw_base, mw_material=mw_material, molar_ratio=ratio, dry_mass_g=dry_mass, allow_new_excipients=allow_new)
+                       mw_base=mw_base, mw_material=mw_material, molar_ratio=ratio, dry_mass_g=dry_mass, allow_new_excipients=allow_new, label_url=label_url)
             t.validate()
             with st.spinner("Identificando o produto, consultando fontes e calculando a proposta..."):
                 bundle = cached_research(json.dumps(asdict(t), sort_keys=True), online)

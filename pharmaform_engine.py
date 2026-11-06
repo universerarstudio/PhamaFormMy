@@ -178,6 +178,8 @@ def from_functions(t, p, sources):
     if not q1_sources:
         p.gaps.append("Q1 específica da apresentação não recuperada. Não se transplantou formulação de outro medicamento. É necessário documento primário compatível ou um exemplo quantitativo do mesmo IFA.")
         return
+    if any(s.get("reference_match") is False for s in q1_sources):
+        p.warnings.append("A Q1 usada pertence a outro fabricante/nome comercial. É um benchmark do IFA, não uma confirmação da composição da referência solicitada.")
     release = release_type(t)
     context = " ".join(s.get("architecture", "") for s in q1_sources)
     if release in ["Retardada", "Não determinada"] or re.search(r"osmotic|osmotico|pellet|multiparticul", norm(context)):
@@ -203,6 +205,8 @@ def functional_solid(t, p, source_ids, release):
     choices = {}
     for name in p.q1:
         role, level = function_of(name)
+        if t.form == "Cápsula dura" and re.search(r"^(?:amido|starch)(?:\b|$)", norm(name)):
+            role, level = "Diluente", 0
         if role not in choices and level is not None:
             choices[role] = (name, level)
     required = ["Diluente", "Lubrificante"]

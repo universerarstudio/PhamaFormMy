@@ -1,4 +1,4 @@
-# PharmaForm 0.3
+# PharmaForm 0.3.1
 
 Compilador farmacotécnico para pesquisa de referências/IFAs e geração de uma proposta inicial Q1/Q2 com cálculos, racional, fontes, lacunas e processo em um relatório.
 
@@ -64,3 +64,13 @@ python tests/run_acceptance.py ../acceptance_output
 ```
 
 Os testes automatizados verificam conversão, teor, balanço com/sem filme, identidades conflitantes, fórmulas de produtos não cadastrados, separação entre apresentações, associações em rotulagem, colunas de patentes, PDF e fluxo Streamlit. Os casos online são separados do CI offline e registram o que foi realmente recuperado. Consulte `TEST_RESULTS.md`.
+
+## Revisão de estresse 0.3.1
+
+Entrada livre, sem botões de exemplos. A base da dose fica visível; o padrão identifica pela bula e bloqueia se não houver comprovação. A busca aceita um vocabulário químico português/inglês; isso não fornece formulações. Conversão automática de cloridratos exige fórmula molecular compatível 1:1, ou equivalência numérica explícita da bula. Sais multivalentes e hidratos permanecem pendentes.
+
+O primeiro adaptador brasileiro consulta páginas de bula Apsen por nome comercial e lê a seção da concentração. Não é um buscador universal de todas as marcas brasileiras. URLs manuais só são lidas de fabricantes/autoridades habilitados. Documentos que não têm o padrão de composição suportado não geram composição automática. As falhas de rede ficam expostas e o botão Atualizar fontes limpa o cache para nova tentativa.
+
+A dose informada precisa existir na rotulagem selecionada. Uma Q1 de outro fabricante é sinalizada como benchmark, não como composição confirmada da marca solicitada. Os excipientes da cápsula vazia não são adicionados ao conteúdo; amido pode servir como diluente do enchimento.
+
+A suíte e os resultados ficam em `test_suite.zip`, fora da interface. Extraia o arquivo na raiz antes de executar os comandos de testes acima. O relatório detalhado está em `TEST_RESULTS.md`.
